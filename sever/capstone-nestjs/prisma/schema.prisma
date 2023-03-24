@@ -30,14 +30,14 @@ model DatVe {
   ma_dat_ve     Int       @id @default(autoincrement())
   ma_ghe        Int
   ma_lich_chieu Int
-  tai_khoan     Int
+  ma_tai_khoan  Int
   Ghe           Ghe       @relation(fields: [ma_ghe], references: [ma_ghe], onDelete: NoAction, onUpdate: NoAction, map: "DatVe_ibfk_1")
   LichChieu     LichChieu @relation(fields: [ma_lich_chieu], references: [ma_lich_chieu], onDelete: NoAction, onUpdate: NoAction, map: "DatVe_ibfk_2")
-  NguoiDung     NguoiDung @relation(fields: [tai_khoan], references: [tai_khoan], onDelete: NoAction, onUpdate: NoAction, map: "DatVe_ibfk_3")
+  NguoiDung     NguoiDung @relation(fields: [ma_tai_khoan], references: [ma_tai_khoan], onDelete: NoAction, onUpdate: NoAction, map: "DatVe_ibfk_3")
 
   @@index([ma_ghe], map: "ma_ghe")
   @@index([ma_lich_chieu], map: "ma_lich_chieu")
-  @@index([tai_khoan], map: "tai_khoan")
+  @@index([ma_tai_khoan], map: "ma_tai_khoan")
 }
 
 model Ghe {
@@ -73,7 +73,8 @@ model LichChieu {
 }
 
 model NguoiDung {
-  tai_khoan       Int     @id @default(autoincrement())
+  ma_tai_khoan    Int     @id @default(autoincrement())
+  tai_khoan       String  @db.VarChar(150)
   ho_ten          String? @db.VarChar(200)
   email           String? @db.VarChar(200)
   so_dt           String? @db.VarChar(100)

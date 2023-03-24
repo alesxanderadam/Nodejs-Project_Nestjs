@@ -5,6 +5,7 @@ import { Response } from 'express';
 export class ResponseService {
     public successCode(res: Response, data: any, message: string): void {
         res.status(HttpStatus.OK).json({
+            statusCode: HttpStatus.OK,
             message,
             content: data,
         });
@@ -12,6 +13,7 @@ export class ResponseService {
 
     public successCodeNoData(res: Response, message: string): void {
         res.status(HttpStatus.CREATED).json({
+            statusCode: HttpStatus.CREATED,
             message,
             content: {},
         });
@@ -19,6 +21,7 @@ export class ResponseService {
 
     public sendBadRequestResponse(res: Response, data: any, message: string): void {
         res.status(HttpStatus.BAD_REQUEST).json({
+            statusCode: HttpStatus.BAD_REQUEST,
             message,
             content: data,
         });
@@ -26,6 +29,15 @@ export class ResponseService {
 
     public sendUnauthorizedResponse(res: Response, data: any, message: string): void {
         res.status(HttpStatus.UNAUTHORIZED).json({
+            statusCode: HttpStatus.UNAUTHORIZED,
+            message,
+            content: data,
+        });
+    }
+
+    public sendFobidden(res: Response, data: any, message: string): void {
+        res.status(HttpStatus.FORBIDDEN).json({
+            statusCode: HttpStatus.FORBIDDEN,
             message,
             content: data,
         });
@@ -33,6 +45,7 @@ export class ResponseService {
 
     public sendNotFoundResponse(res: Response, data: any, message: string): void {
         res.status(HttpStatus.NOT_FOUND).json({
+            statusCode: HttpStatus.NOT_FOUND,
             message,
             content: data,
         });
@@ -40,6 +53,7 @@ export class ResponseService {
 
     public sendConflict(res: Response, data: any, message: string): void {
         res.status(HttpStatus.CONFLICT).json({
+            statusCode: HttpStatus.CONFLICT,
             message,
             content: data,
         });

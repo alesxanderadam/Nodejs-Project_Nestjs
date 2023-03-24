@@ -1,5 +1,4 @@
-import { JwtStrategy } from './strategy/jwt.stategy';
-import { ResponseService } from './common/response-status';
+import { MovieModule } from './api/movie/movie.module';
 import { Module } from '@nestjs/common';
 import { AuthModule } from './api/auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
@@ -11,6 +10,7 @@ import { UserModule } from './api/user/user.module';
     ConfigModule.forRoot({ isGlobal: true }),
     AuthModule,
     UserModule,
+    MovieModule
   ],
   controllers: [],
   providers: [],

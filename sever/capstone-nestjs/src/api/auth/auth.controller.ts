@@ -1,21 +1,19 @@
 import { SignInSwaggerType, SignUpSwaggerType } from '../../models/auth/swagger/auth.swagger';
 import { AuthService } from './auth.service';
-import { ResponseService } from '../../common/response-status';
 import { SignIn, SignUp } from '../../models/auth/dto/auth.dto';
 import { Body, Controller, Post, HttpStatus } from '@nestjs/common';
-import { Res } from '@nestjs/common/decorators';
+import { Request, Res } from '@nestjs/common/decorators';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { plainToClass } from 'class-transformer';
+import { Response } from 'express';
 
 @ApiTags('Auth')
-@Controller('api/auth')
+@Controller('api/Auth')
 export class AuthController {
     constructor(
-        private readonly res: ResponseService,
         private readonly authService: AuthService
     ) { }
 
-    @Post("signIn")
+    @Post("SignIn")
     @ApiBody({ type: SignInSwaggerType })
     @ApiResponse({
         status: HttpStatus.OK,
@@ -26,14 +24,14 @@ export class AuthController {
         description: 'Tên đăng nhập hoặc mật khẩu không chính xác',
     })
     @ApiOperation({
-        summary: 'Đăng nhập',
-        description: 'Đăng nhập vào hệ thống với tên đăng nhập và mật khẩu',
+        summary: 'Sign In',
+        description: 'Sign in with email and password',
     })
     async signIn(@Res() res, @Body() body: SignIn): Promise<void> {
         return await this.authService.signIn(res, body)
     }
 
-    @Post("signUp")
+    @Post("SignUp")
     @ApiBody({ type: SignUpSwaggerType })
     @ApiResponse({
         status: HttpStatus.OK,
@@ -44,10 +42,9 @@ export class AuthController {
         description: 'Email đã được đăng ký',
     })
     @ApiOperation({
-        summary: 'Đăng ký người dùng',
+        summary: 'Sign up user',
     })
-    @Post("signUp")
-    async signUp(@Res() res, @Body() body: SignUp): Promise<void> {
-        return await this.authService.signUp(res, body)
+    async signUp(@Request() req, @Res() res: Response, @Body() body: SignUp): Promise<void> {
+        return await this.authService.signUp(req, res, body)
     }
 }

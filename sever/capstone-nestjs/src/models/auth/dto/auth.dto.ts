@@ -1,45 +1,51 @@
-import { Exclude, Expose, Transform } from "class-transformer";
+import { Expose, Transform } from "class-transformer";
 import { IsEmail, IsNotEmpty } from "class-validator";
 import { BaseDto } from "src/common/base.dto";
-
+import { ConverData } from "src/common/translate-data";
 export class SignIn {
-    @IsEmail()
     @Expose() // nếu để xpose thì chỗ này sẽ được trả ra khi đăng ký thanahf công
-    email: string;
+    @IsNotEmpty()
+    tai_khoan: string;
 
     @IsNotEmpty()
-    // @Expose()
     mat_khau: string;
 }
 
 export class SignUp extends SignIn implements BaseDto {
     @IsNotEmpty()
-    /* @Expose không cần để vào cug được nó dóng vai trò chỉ định trường này sẽ được show ra */
-    // @Expose()
+    @Expose()
     ho_ten: string;
 
-    @Exclude()
-    ten_dau: string;
+    @Expose()
+    @IsEmail()
+    email: string;
 
-    @Exclude()
-    ten_cuoi: string;
-
-    // @Expose()
-    @Transform(({ obj }) => obj.ten_dau + " " + obj.ten_cuoi)
-    ho_ten_day_du: string
-
+    @Expose()
     @IsNotEmpty()
-    // @Expose()
     so_dt: string;
 
-    @IsNotEmpty()
-    // @Expose()
+    @Expose()
+    @Transform(({ value }) => ({
+        maLoaiNguoiDung: value,
+        tenLoai: ConverData.getTenLoaiNguoiDung(value)
+    }))
     loai_nguoi_dung: string;
 
-    // @Expose()
+    @Expose()
+    loaiNguoiDung: {
+        maLoaiNguoiDung: string;
+        tenLoai: string;
+    };
+
+    // ten_dau: string;
+
+    // ten_cuoi: string;
+
+    // @Transform(({ obj }) => obj.ten_dau + " " + obj.ten_cuoi)
+    // ho_ten_day_du: string
+
     createdAt: Date;
 
-    // @Expose()
     updatedAt: Date;
 
 }
