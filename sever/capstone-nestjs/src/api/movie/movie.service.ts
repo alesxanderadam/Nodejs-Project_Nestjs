@@ -163,4 +163,29 @@ export class MovieService {
             throw new HttpException("Lỗi sever", HttpStatus.INTERNAL_SERVER_ERROR)
         }
     }
+
+
+    async uploadImageMovie(id: number, res: Response, file: Express.Multer.File): Promise<void> {
+        try {
+            let checkMovie = await this.prisma.phim.findUnique({
+                where: { ma_phim: id }
+            })
+            if (!checkMovie) {
+                return this.responseStatus.sendNotFoundResponse(res, id, "Không tìm thấy dữ liệu")
+            }
+            let createImagesMovie = await this.prisma.hinhAnhPhim.create({
+                data: { ma_phim: id, duong_dan: process.env.DB_HOST + ":" + process.env.PORT_SERVER + "/" + file.filename }
+            })
+
+            if (createImagesMovie) {
+                this.responseStatus.successCode(res, createImagesMovie, "Thêm ảnh thành công")
+            } else {
+                return this.responseStatus.successCodeNoData(res, "Không tìm thấy dữ liệu")
+            }
+
+        } catch (error) {
+            console.log(error)
+            throw new HttpException("Lỗi server", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

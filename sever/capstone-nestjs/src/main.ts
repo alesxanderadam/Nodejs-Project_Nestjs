@@ -6,7 +6,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.use(express.static("."))
+  app.use(express.static("./public/images"))
   app.use(express.json());
   app.enableCors();
   app.useGlobalPipes(new ValidationPipe())

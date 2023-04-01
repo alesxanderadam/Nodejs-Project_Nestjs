@@ -1,9 +1,14 @@
+import { ResponseService } from './../../common/response-status';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiTags, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiQuery, ApiConsumes, ApiBody, ApiParam } from '@nestjs/swagger';
 import { MovieService } from './movie.service';
-import { Controller, Get, Res, UseGuards, Query, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Res, UseGuards, Query, ParseIntPipe, Post, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { Response } from 'express';
 import { Param } from '@nestjs/common/decorators';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { FileUploadDto } from 'src/models/cinema/swagger/cinema-swagger';
+import { UpdateUserType } from 'src/models/user/swagger/user.swagger';
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard(("jwt")))
@@ -57,5 +62,20 @@ export class MovieController {
         @Query("toDay") toDay: Date
     ): Promise<void> {
         return await this.movieService.getMovieListByDate(res, keyword, page, pageSize, fromDay, toDay);
+    }
+
+    @Post("UploadImagesMovie/:IdMovie")
+    @UseInterceptors(FileInterceptor("file", {
+        storage: diskStorage({
+            destination: process.cwd() + "/public/images/",
+            filename: (req, file, callback) => callback(null, Date.now() + "_" + file.originalname) // Dổi tên file ảnh thành ngày giờ up + tên gốc
+        })
+    })) //Đóng vai trò là middleware
+
+    @ApiConsumes('multipart/form-data')
+    @ApiBody({ description: 'List of iamges', type: FileUploadDto })
+    @ApiParam({ name: "IdMovie", description: "Enter id movie to upload image this movie" })
+    async uploadImageMovie(@Param("IdMovie", ParseIntPipe) id: number, @Res() res: Response, @UploadedFile() file: Express.Multer.File): Promise<void> {
+        return await this.movieService.uploadImageMovie(id, res, file)
     }
 }

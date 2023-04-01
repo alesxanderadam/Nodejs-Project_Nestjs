@@ -19,7 +19,7 @@ model CumRap {
   ma_cum_rap      Int        @id @default(autoincrement())
   ten_cum_rap     String?    @db.VarChar(200)
   dia_chi         String?    @db.VarChar(200)
-  ma_he_thong_rap Int
+  ma_he_thong_rap String     @db.VarChar(200)
   HeThongRap      HeThongRap @relation(fields: [ma_he_thong_rap], references: [ma_he_thong_rap], onDelete: NoAction, onUpdate: NoAction, map: "CumRap_ibfk_1")
   RapPhim         RapPhim[]
 
@@ -52,7 +52,7 @@ model Ghe {
 }
 
 model HeThongRap {
-  ma_he_thong_rap Int      @id @default(autoincrement())
+  ma_he_thong_rap String   @id @db.VarChar(200)
   ten_he_thong    String?  @db.VarChar(200)
   logo            String?  @db.VarChar(200)
   CumRap          CumRap[]
@@ -84,17 +84,18 @@ model NguoiDung {
 }
 
 model Phim {
-  ma_phim         Int         @id @default(autoincrement())
-  ten_phim        String?     @db.VarChar(200)
-  trailer         String?     @db.VarChar(200)
-  hinh_anh        String?     @db.VarChar(200)
-  mo_ta           String?     @db.VarChar(200)
-  ngay_khoi_chieu DateTime?   @db.Date
+  ma_phim         Int           @id @default(autoincrement())
+  ten_phim        String?       @db.VarChar(200)
+  trailer         String?       @db.VarChar(200)
+  hinh_anh        String?       @db.VarChar(200)
+  mo_ta           String?       @db.VarChar(200)
+  ngay_khoi_chieu DateTime?     @db.Date
   danh_gia        Int?
   hot             Boolean?
   dang_chieu      Boolean?
   sap_chieu       Boolean?
   Banner          Banner[]
+  HinhAnhPhim     HinhAnhPhim[]
   LichChieu       LichChieu[]
 }
 
@@ -107,4 +108,13 @@ model RapPhim {
   CumRap     CumRap      @relation(fields: [ma_cum_rap], references: [ma_cum_rap], onDelete: NoAction, onUpdate: NoAction, map: "RapPhim_ibfk_1")
 
   @@index([ma_cum_rap], map: "ma_cum_rap")
+}
+
+model HinhAnhPhim {
+  ma_hinh_anh Int     @id @default(autoincrement())
+  ma_phim     Int
+  duong_dan   String? @db.VarChar(200)
+  Phim        Phim    @relation(fields: [ma_phim], references: [ma_phim], onDelete: NoAction, onUpdate: NoAction, map: "HinhAnhPhim_ibfk_1")
+
+  @@index([ma_phim], map: "ma_phim")
 }
