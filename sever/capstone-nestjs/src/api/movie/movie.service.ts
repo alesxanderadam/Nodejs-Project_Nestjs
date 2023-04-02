@@ -7,6 +7,7 @@ import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { Response } from 'express';
 import * as moment from 'moment';
 import { format } from 'date-fns'
+import { MovieDto } from 'src/models/movie/swagger/movie-swagger';
 
 @Injectable()
 export class MovieService {
@@ -164,8 +165,40 @@ export class MovieService {
         }
     }
 
+    async createMovie(file: Express.Multer.File, res: Response, body: MovieDto): Promise<void> {
+        try {
+            console.log(file)
+            let checkNameMovie = await this.prisma.phim.findFirst({
+                where: { ten_phim: body.ten_phim }
+            })
+            if (checkNameMovie) {
+                return this.responseStatus.sendConflict(res, checkNameMovie.ten_phim, "Tên phim đã có")
+            }
+            let data_movie: MovieDto = {
+                ten_phim: body.ten_phim,
+                trailer: body.trailer,
+                hinh_anh: file.filename,
+                mo_ta: body.mo_ta,
+                ngay_khoi_chieu: body.ngay_khoi_chieu,
+                danh_gia: body.danh_gia,
+                hot: body.hot,
+                dang_chieu: body.dang_chieu,
+                sap_chieu: body.sap_chieu
+            }
+            let newMovie = await this.prisma.phim.create({
+                data: data_movie
+            })
 
-    async uploadImageMovie(id: number, res: Response, file: Express.Multer.File): Promise<void> {
+            this.responseStatus.successCode(res, newMovie, "Thêm phim thành công");
+        } catch (error) {
+            console.log(error)
+            throw new HttpException("Lỗi server", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+    }
+
+
+    async uploadImageMovie(id: number, res: Response, files: Express.Multer.File[]): Promise<void> {
         try {
             let checkMovie = await this.prisma.phim.findUnique({
                 where: { ma_phim: id }
@@ -173,9 +206,11 @@ export class MovieService {
             if (!checkMovie) {
                 return this.responseStatus.sendNotFoundResponse(res, id, "Không tìm thấy dữ liệu")
             }
-            let createImagesMovie = await this.prisma.hinhAnhPhim.create({
-                data: { ma_phim: id, duong_dan: process.env.DB_HOST + ":" + process.env.PORT_SERVER + "/" + file.filename }
-            })
+            const createImagesMovie = await Promise.all(files.map(async (file) => {
+                return await this.prisma.hinhAnhPhim.create({
+                    data: { ma_phim: id, duong_dan: process.env.DB_HOST + ":" + process.env.PORT_SERVER + "/" + file.filename }
+                })
+            }))
 
             if (createImagesMovie) {
                 this.responseStatus.successCode(res, createImagesMovie, "Thêm ảnh thành công")

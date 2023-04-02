@@ -1,14 +1,13 @@
-import { ResponseService } from './../../common/response-status';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiBearerAuth, ApiQuery, ApiConsumes, ApiBody, ApiParam } from '@nestjs/swagger';
 import { MovieService } from './movie.service';
-import { Controller, Get, Res, UseGuards, Query, ParseIntPipe, Post, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Get, Res, UseGuards, Query, ParseIntPipe, Post, UseInterceptors, UploadedFile, UploadedFiles } from '@nestjs/common';
 import { Response } from 'express';
-import { Param } from '@nestjs/common/decorators';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { Body, Param, Put } from '@nestjs/common/decorators';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { FileUploadDto } from 'src/models/cinema/swagger/cinema-swagger';
-import { UpdateUserType } from 'src/models/user/swagger/user.swagger';
+import { MovieDto } from 'src/models/movie/swagger/movie-swagger';
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard(("jwt")))
@@ -64,18 +63,49 @@ export class MovieController {
         return await this.movieService.getMovieListByDate(res, keyword, page, pageSize, fromDay, toDay);
     }
 
-    @Post("UploadImagesMovie/:IdMovie")
-    @UseInterceptors(FileInterceptor("file", {
+    @Post("CreateMovie")
+    @ApiConsumes('multipart/form-data')
+    @UseInterceptors(FilesInterceptor("file", 20, {
         storage: diskStorage({
             destination: process.cwd() + "/public/images/",
-            filename: (req, file, callback) => callback(null, Date.now() + "_" + file.originalname) // Dổi tên file ảnh thành ngày giờ up + tên gốc
+            filename: (req, file, callback) => callback(null, Date.now() + "_" + file.originalname)
         })
-    })) //Đóng vai trò là middleware
+    }))
+    @ApiBody({ type: MovieDto })
+    async createMovie(@UploadedFile() file: Express.Multer.File, res: Response, @Body() body: MovieDto) {
+        return await this.movieService.createMovie(file, res, body)
+    }
 
+    @Post("UploadImagesMovie/:IdMovie")
+    @UseInterceptors(FilesInterceptor("files", 20, {
+        storage: diskStorage({
+            destination: process.cwd() + "/public/images/",
+            filename: (req, file, callback) => callback(null, Date.now() + "_" + file.originalname) // Đổi tên file ảnh thành ngày giờ up + tên gốc
+        })
+    }))
     @ApiConsumes('multipart/form-data')
-    @ApiBody({ description: 'List of iamges', type: FileUploadDto })
+    @ApiBody({
+        type: MovieDto,
+        description: 'Multiple files input',
+        schema: {
+            type: 'object',
+            properties: {
+                files: {
+                    type: 'array',
+                    items: {
+                        type: 'string',
+                        format: 'binary',
+                    },
+                },
+            },
+        },
+    })
     @ApiParam({ name: "IdMovie", description: "Enter id movie to upload image this movie" })
-    async uploadImageMovie(@Param("IdMovie", ParseIntPipe) id: number, @Res() res: Response, @UploadedFile() file: Express.Multer.File): Promise<void> {
-        return await this.movieService.uploadImageMovie(id, res, file)
+    async uploadImageMovie(
+        @Param("IdMovie", ParseIntPipe) id: number,
+        @Res() res: Response,
+        @UploadedFiles() files: Array<Express.Multer.File>,
+    ): Promise<void> {
+        return await this.movieService.uploadImageMovie(id, res, files);
     }
 }
