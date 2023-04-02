@@ -1,0 +1,159 @@
+use db_movie;
+
+	CREATE TABLE Phim(
+		 ma_phim int auto_increment primary key not null,
+		 ten_phim varchar(200),
+		 trailer varchar(200),
+		 hinh_anh varchar(200),
+		 mo_ta varchar(200),
+		 ngay_khoi_chieu date,
+		 danh_gia int, 
+		 hot boolean,
+		 dang_chieu boolean,
+		 sap_chieu boolean
+	);
+
+	CREATE TABLE Banner(
+		ma_banner int auto_increment primary key not null,
+		ma_phim int not null,
+		FOREIGN KEY(ma_phim) REFERENCES Phim(ma_phim)
+	);
+
+	CREATE TABLE HeThongRap(
+		ma_he_thong_rap varchar(200) primary key not null,
+		ten_he_thong varchar(200),
+		logo varchar(200)
+	);
+
+	CREATE TABLE CumRap(
+		ma_cum_rap int auto_increment primary key not null,
+		ten_cum_rap varchar(200),
+		dia_chi varchar(200),
+		ma_he_thong_rap varchar(200) not null,
+		FOREIGN KEY(ma_he_thong_rap) REFERENCES HeThongRap(ma_he_thong_rap)
+	);
+
+	CREATE TABLE RapPhim(
+		ma_rap int auto_increment primary key not null,
+		ten_rap varchar(200),
+		ma_cum_rap int not null,
+		FOREIGN KEY(ma_cum_rap) REFERENCES CumRap(ma_cum_rap)
+	);
+
+	CREATE TABLE Ghe(
+		ma_ghe int auto_increment primary key not null,
+		ten_ghe varchar(200),
+		loai_ghe varchar(50),
+		ma_rap int not null,
+		FOREIGN KEY(ma_rap) REFERENCES RapPhim(ma_rap)
+	);
+
+	CREATE TABLE LichChieu(
+		ma_lich_chieu int auto_increment primary key not null,
+		ma_rap int not null,
+		ma_phim int not null,
+		ngay_gio_chieu datetime,
+		gia_ve int,
+		FOREIGN KEY(ma_rap) REFERENCES RapPhim(ma_rap),
+		FOREIGN KEY(ma_phim) REFERENCES Phim(ma_phim)
+	);
+
+	CREATE TABLE NguoiDung(
+		ma_tai_khoan int primary key auto_increment not null,
+		tai_khoan varchar(150) not null,
+		ho_ten varchar(200),
+		email varchar(200),
+		so_dt varchar(100),
+		mat_khau varchar(100),
+		loai_nguoi_dung varchar(50)
+	);
+
+	CREATE TABLE DatVe(
+		ma_dat_ve int auto_increment primary key not null,
+		ma_ghe int not null,
+		ma_lich_chieu int not null,
+		ma_tai_khoan int not null,
+		FOREIGN KEY(ma_ghe) REFERENCES Ghe(ma_ghe),
+		FOREIGN KEY(ma_lich_chieu) REFERENCES LichChieu(ma_lich_chieu),
+		FOREIGN KEY(ma_tai_khoan) REFERENCES NguoiDung(ma_tai_khoan)
+	);
+    
+    CREATE TABLE HinhAnhPhim(
+	ma_hinh_anh int auto_increment primary key not null,
+	ma_phim int not null,
+	duong_dan varchar(200),	
+	FOREIGN KEY(ma_phim) REFERENCES Phim(ma_phim)
+);
+
+-- ALTER TABLE HinhAnhPhim AUTO_INCREMENT = 1;
+
+
+INSERT INTO Phim (ten_phim, trailer, hinh_anh, mo_ta, ngay_khoi_chieu, danh_gia, hot, dang_chieu, sap_chieu) 
+VALUES 
+('Spider-Man: No Way Home', 'https://www.youtube.com/watch?v=_FfjJ-jD2P0', 'https://i.imgur.com/02OLcKw.jpg', 'Sau khi danh tiếng của Peter bị hủy hoại, anh ta đến nhờ Doctor Strange và sử dụng phép', '2021-12-17', 8, 1, 1, 0),
+('The Batman', 'https://www.youtube.com/watch?v=5v3__N8aGcg', 'https://i.imgur.com/gcfv1kW.jpg', 'Kể về hành trình trở thành Người Dơi của Bruce Wayne, từ những ngày đau khổ sau cái chết của bố mẹ đến việc chọn con đường trừng phạt tội phạm tại thành phố Gotham', '2022-03-04', 0, 0, 0, 1),
+('Avatar 2', 'https://www.youtube.com/watch?v=rpT1dL7iheY', 'https://i.imgur.com/eN3iN9P.jpg', 'Tiếp nối phần 1, bộ phim kể về cuộc phiêu lưu của Jake Sully trên hành tinh Pandora', '2022-12-16', 0, 0, 0, 1);
+
+INSERT INTO Banner (ma_phim) 
+VALUES 
+(1),
+(2),
+(3);
+
+INSERT INTO HeThongRap (ma_he_thong_rap,ten_he_thong, logo) 
+VALUES 
+('CGV', 'CGV Cinemas', 'https://i.imgur.com/1Jw29NN.png'),
+('LOTTERIA','Lotteria Entertainment', 'https://i.imgur.com/jJ9cT98.png'),
+('BHD','BHD Cinemas', 'https://i.imgur.com/19ngsDr.png');
+
+INSERT INTO CumRap (ten_cum_rap, dia_chi, ma_he_thong_rap) 
+VALUES 
+('CGV Mega Mall', 'Lý Thường Kiệt, Quận 10, TP. HCM', 'CGV'),
+('Lotteria Phú Yên', 'Trần Hưng Đạo, TP. Tuy Hòa, Phú Yên', 'LOTTERIA'),
+('BHD Star Cineplex', 'Vincom Thảo Điền, Quận 2, TP. HCM', 'BHD');
+
+INSERT INTO RapPhim (ten_rap, ma_cum_rap) 
+VALUES 
+('Rạp 1', 1),
+('Rạp 2', 1),
+('Rạp 3', 2),
+('Rạp 4', 3),
+('Rạp 5', 3);
+
+INSERT INTO Ghe (ten_ghe, loai_ghe, ma_rap) 
+VALUES 
+('Ghế số 1', 'VIP', 1),
+('Ghế số 2', 'VIP', 1),
+('Ghế số 3', 'Thường', 1),
+('Ghế số 4', 'Thường', 1),
+('Ghế số 5', 'Thường', 1);
+
+INSERT INTO Ghe (ten_ghe, loai_ghe, ma_rap) 
+VALUES 
+('Ghế số 1', 'VIP', 2),
+('Ghế số 2', 'VIP', 2),
+('Ghế số 3', 'Thường', 2),
+('Ghế số 4', 'Thường', 2),
+('Ghế số 5', 'Thường', 2);
+
+INSERT INTO LichChieu (ma_rap, ma_phim, ngay_gio_chieu, gia_ve) 
+VALUES 
+(1, 1, '2022-04-01 19:30:00', 100000),
+(1, 2, '2022-04-01 22:00:00', 80000),
+(2, 3, '2022-04-02 20:00:00', 90000);
+
+
+INSERT INTO NguoiDung (tai_khoan, ho_ten, email, so_dt, mat_khau, loai_nguoi_dung)
+VALUES 
+('minhquy123','Lê Trần Minh Qúy', 'ltmquy.th18@gamil.com', '125092512', '$2a$10$V9aopem9YmdpIqzGveMfXeU9TYoqUqrnqoRoxtxFnRD6iBHdsl72y', 'KhachHang'),
+('b123','Tran Thi B', 'thib@gmail.com', '0912345678', 'abcdef', 'KhachHang'),
+('quanghuy123','Lê Tràn Quang Huy', 'ltqhuy.th0112@gmail.com', '1231241254', '$2a$10$7nCkYx6SjV4iBWESbgqRsuezH9BRNLo3z1/bdi8ckcN9r5.xuCvBu', 'QuanTriVien');
+
+INSERT INTO DatVe(ma_ghe, ma_lich_chieu, ma_tai_khoan)
+VALUES (1, 1, 1);
+
+
+
+
+
+
