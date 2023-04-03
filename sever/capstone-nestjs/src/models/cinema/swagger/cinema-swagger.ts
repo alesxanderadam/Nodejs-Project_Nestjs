@@ -1,6 +1,7 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty } from '@nestjs/swagger/dist/decorators';
+
 
 export class FileUploadDto {
     @ApiProperty({ type: 'string', format: 'binary' })
-    file: any;
+    files: any;
 }

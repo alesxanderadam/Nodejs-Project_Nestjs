@@ -1,7 +1,7 @@
 import { ListMovieResponseDto } from './../../models/movie/dto/movie.dto';
 import { BannerResponseDto } from '../../models/movie/dto/movie.dto';
 import { plainToInstance, plainToClass } from 'class-transformer';
-import { PrismaClient } from '@prisma/client';
+import { Phim, PrismaClient } from '@prisma/client';
 import { ResponseService } from './../../common/response-status';
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { Response } from 'express';
@@ -167,34 +167,85 @@ export class MovieService {
 
     async createMovie(file: Express.Multer.File, res: Response, body: MovieDto): Promise<void> {
         try {
-            console.log(file)
             let checkNameMovie = await this.prisma.phim.findFirst({
-                where: { ten_phim: body.ten_phim }
+                where: {
+                    ten_phim: body.ten_phim
+                }
             })
             if (checkNameMovie) {
-                return this.responseStatus.sendConflict(res, checkNameMovie.ten_phim, "Tên phim đã có")
+                return this.responseStatus.sendConflict(res, checkNameMovie.ten_phim, "Phim đã tồn tại")
             }
-            let data_movie: MovieDto = {
-                ten_phim: body.ten_phim,
-                trailer: body.trailer,
-                hinh_anh: file.filename,
-                mo_ta: body.mo_ta,
-                ngay_khoi_chieu: body.ngay_khoi_chieu,
-                danh_gia: body.danh_gia,
-                hot: body.hot,
-                dang_chieu: body.dang_chieu,
-                sap_chieu: body.sap_chieu
-            }
-            let newMovie = await this.prisma.phim.create({
-                data: data_movie
+            let movieUpdate = await this.prisma.phim.create({
+                data: {
+                    ten_phim: body.ten_phim,
+                    trailer: body.trailer,
+                    hinh_anh: process.env.DB_HOST + ":" + process.env.PORT_SERVER + "/" + file.filename,
+                    mo_ta: body.mo_ta,
+                    ngay_khoi_chieu: format(new Date(body.ngay_khoi_chieu), "yyyy-MM-dd") + 'T00:00:00.000Z',
+                    danh_gia: parseInt(body.danh_gia),
+                    hot: Boolean(body.hot),
+                    dang_chieu: Boolean(body.dang_chieu),
+                    sap_chieu: Boolean(body.sap_chieu)
+                }
             })
+            if (movieUpdate == null) {
+                this.responseStatus.sendBadRequestResponse(res, movieUpdate, "Không thể thêm phim");
+            } else {
+                const plainListMovie = plainToClass(ListMovieResponseDto, movieUpdate, { excludeExtraneousValues: false })
+                const processedListMovie = { ...plainListMovie, biDanh: plainListMovie.tenPhim.toLocaleLowerCase().replace(/ /g, "-") }
+                return this.responseStatus.successCode(res, processedListMovie, "Xử lý thành công")
+            }
 
-            this.responseStatus.successCode(res, newMovie, "Thêm phim thành công");
         } catch (error) {
             console.log(error)
-            throw new HttpException("Lỗi server", HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new HttpException('Lỗi server', HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
 
+    async updateMovie(idImage: any, file: Express.Multer.File, res: Response, body: MovieDto): Promise<void> {
+        try {
+            let checkMovieExists = await this.prisma.phim.findUnique({
+                where: { ma_phim: idImage }
+            })
+            if (checkMovieExists) {
+                return this.responseStatus.sendNotFoundResponse(res, idImage, "Không tìm thấy dữ liệu")
+            }
+            let checkNameMovie = await this.prisma.phim.findFirst({
+                where: {
+                    ten_phim: body.ten_phim
+                }
+            })
+            if (checkNameMovie) {
+                return this.responseStatus.sendConflict(res, checkNameMovie.ten_phim, "Phim đã tồn tại")
+            }
+            let movieUpdate = await this.prisma.phim.update({
+                where: {
+                    ma_phim: idImage
+                },
+                data: {
+                    ten_phim: body.ten_phim,
+                    trailer: body.trailer,
+                    hinh_anh: process.env.DB_HOST + ":" + process.env.PORT_SERVER + "/" + file.filename,
+                    mo_ta: body.mo_ta,
+                    ngay_khoi_chieu: format(new Date(body.ngay_khoi_chieu), "yyyy-MM-dd") + 'T00:00:00.000Z',
+                    danh_gia: parseInt(body.danh_gia),
+                    hot: Boolean(body.hot),
+                    dang_chieu: Boolean(body.dang_chieu),
+                    sap_chieu: Boolean(body.sap_chieu)
+                }
+            })
+            if (movieUpdate == null) {
+                this.responseStatus.sendBadRequestResponse(res, movieUpdate, "Không thể thêm phim");
+            } else {
+                const plainListMovie = plainToClass(ListMovieResponseDto, movieUpdate, { excludeExtraneousValues: false })
+                const processedListMovie = { ...plainListMovie, biDanh: plainListMovie.tenPhim.toLocaleLowerCase().replace(/ /g, "-") }
+                return this.responseStatus.successCode(res, processedListMovie, "Xử lý thành công")
+            }
+
+        } catch (error) {
+            console.log(error)
+            throw new HttpException('Lỗi server', HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
 

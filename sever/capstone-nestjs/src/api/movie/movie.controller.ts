@@ -1,12 +1,11 @@
 import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiBearerAuth, ApiQuery, ApiConsumes, ApiBody, ApiParam } from '@nestjs/swagger';
 import { MovieService } from './movie.service';
-import { Controller, Get, Res, UseGuards, Query, ParseIntPipe, Post, UseInterceptors, UploadedFile, UploadedFiles } from '@nestjs/common';
+import { Controller, Get, Res, UseGuards, Query, ParseIntPipe, Post, UseInterceptors, UploadedFile, UploadedFiles, HttpStatus, HttpException } from '@nestjs/common';
 import { Response } from 'express';
-import { Body, Param, Put } from '@nestjs/common/decorators';
-import { FilesInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { FileUploadDto } from 'src/models/cinema/swagger/cinema-swagger';
+import { Body, Param } from '@nestjs/common/decorators';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import multer, { diskStorage } from 'multer';
 import { MovieDto } from 'src/models/movie/swagger/movie-swagger';
 
 @ApiBearerAuth()
@@ -15,6 +14,9 @@ import { MovieDto } from 'src/models/movie/swagger/movie-swagger';
 @Controller('api/Movie')
 export class MovieController {
     constructor(readonly movieService: MovieService) { }
+
+
+
 
     @Get("GetListBanner")
     async getListBanner(@Res() res: Response): Promise<void> {
@@ -63,29 +65,52 @@ export class MovieController {
         return await this.movieService.getMovieListByDate(res, keyword, page, pageSize, fromDay, toDay);
     }
 
+
     @Post("CreateMovie")
-    @ApiConsumes('multipart/form-data')
-    @UseInterceptors(FilesInterceptor("file", 20, {
+    @UseInterceptors(FileInterceptor("hinh_anh", {
         storage: diskStorage({
             destination: process.cwd() + "/public/images/",
             filename: (req, file, callback) => callback(null, Date.now() + "_" + file.originalname)
         })
     }))
+    @ApiConsumes('multipart/form-data')
     @ApiBody({ type: MovieDto })
-    async createMovie(@UploadedFile() file: Express.Multer.File, res: Response, @Body() body: MovieDto) {
-        return await this.movieService.createMovie(file, res, body)
+    async createMovie(@UploadedFile() file: Express.Multer.File, @Res() res: Response, @Body() body: MovieDto): Promise<void> {
+        try {
+            return await this.movieService.createMovie(file, res, body)
+        } catch (error) {
+            console.error(error);
+            throw new HttpException('Lỗi server', HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Post("UpdateMovie/IdMovie")
+    @UseInterceptors(FileInterceptor("hinh_anh", {
+        storage: diskStorage({
+            destination: process.cwd() + "/public/images/",
+            filename: (req, file, callback) => callback(null, Date.now() + "_" + file.originalname)
+        })
+    }))
+    @ApiConsumes('multipart/form-data')
+    @ApiBody({ type: MovieDto })
+    async updateMovie(@Param("IdImage", ParseIntPipe) idImage: number, @UploadedFile() file: Express.Multer.File, @Res() res: Response, @Body() body: MovieDto): Promise<void> {
+        try {
+            return await this.movieService.updateMovie(idImage, file, res, body)
+        } catch (error) {
+            console.error(error);
+            throw new HttpException('Lỗi server', HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @Post("UploadImagesMovie/:IdMovie")
     @UseInterceptors(FilesInterceptor("files", 20, {
         storage: diskStorage({
             destination: process.cwd() + "/public/images/",
-            filename: (req, file, callback) => callback(null, Date.now() + "_" + file.originalname) // Đổi tên file ảnh thành ngày giờ up + tên gốc
+            filename: (req, files, callback) => callback(null, Date.now() + "_" + files.originalname)
         })
     }))
     @ApiConsumes('multipart/form-data')
     @ApiBody({
-        type: MovieDto,
         description: 'Multiple files input',
         schema: {
             type: 'object',
