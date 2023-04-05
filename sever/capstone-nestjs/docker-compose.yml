@@ -1,0 +1,35 @@
+version: '3'
+services:
+  prisma:
+    container_name: project_nestjs
+    build: .
+    ports:
+      - 3001:3001
+    depends_on:
+      - mysql_dbmovie
+    # env_file: .env
+    networks:
+      - node-network
+
+  mysql_dbmovie:
+    image: mysql
+    container_name: mysql_dbmovie
+    ports:
+      - 3307:3306
+    environment:
+      - MYSQL_DATABASE=db_movie
+      - MYSQL_ROOT_PASSWORD=1234
+    # env_file: .env
+    volumes:
+      - mysql_dbmovie:/var/lib/mysql
+    networks:
+      - node-network
+
+volumes:
+  mysql_dbmovie:
+    driver: local
+    name: cc0ada818d48e9f72ffe120c86d46efcf629fe50b73b13062debcd21665c5c26
+
+networks:
+  node-network:
+  
