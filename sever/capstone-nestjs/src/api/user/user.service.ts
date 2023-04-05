@@ -46,8 +46,14 @@ export class UserService {
         }
     }
 
-    async getListUsers(res: Response, keyword: string): Promise<void> {
+    async getListUsers(req: UserTokenPayload, res: Response, keyword: string): Promise<void> {
         try {
+            let checkRoleUser = await this.prisma.nguoiDung.findFirst({
+                where: { ma_tai_khoan: req.user.ma_tai_khoan, loai_nguoi_dung: "QuanTriVien" }
+            })
+            if (!checkRoleUser) {
+                return this.responseStatus.sendFobidden(res, checkRoleUser, "Tài khoản không đủ quyền truy cập")
+            }
             let data = await this.prisma.nguoiDung.findMany({
                 where: keyword ? { ho_ten: { contains: keyword } } : undefined
             })
@@ -62,8 +68,14 @@ export class UserService {
         }
     }
 
-    async getListUsersPaginating(res: Response, keyword: string, page: number, pageSize: any): Promise<void> {
+    async getListUsersPaginating(req: UserTokenPayload, res: Response, keyword: string, page: number, pageSize: any): Promise<void> {
         try {
+            let checkRoleUser = await this.prisma.nguoiDung.findFirst({
+                where: { ma_tai_khoan: req.user.ma_tai_khoan, loai_nguoi_dung: "QuanTriVien" }
+            })
+            if (!checkRoleUser) {
+                return this.responseStatus.sendFobidden(res, checkRoleUser, "Tài khoản không đủ quyền truy cập")
+            }
             const skip = (page - 1) * pageSize;
             const data = await this.prisma.nguoiDung.findMany({
                 where: keyword ? { ho_ten: { contains: keyword } } : undefined,
@@ -92,8 +104,14 @@ export class UserService {
         }
     }
 
-    async searchUser(res: Response, keyword: string): Promise<void> {
+    async searchUser(req: UserTokenPayload, res: Response, keyword: string): Promise<void> {
         try {
+            let checkRoleUser = await this.prisma.nguoiDung.findFirst({
+                where: { ma_tai_khoan: req.user.ma_tai_khoan, loai_nguoi_dung: "QuanTriVien" }
+            })
+            if (!checkRoleUser) {
+                return this.responseStatus.sendFobidden(res, checkRoleUser, "Tài khoản không đủ quyền truy cập")
+            }
             let data = await this.prisma.nguoiDung.findMany({
                 where: keyword ? { ho_ten: { contains: keyword } } : undefined
             })
@@ -108,8 +126,14 @@ export class UserService {
         }
     }
 
-    async searchUserPaginating(res: Response, keyword: string, page: number, pageSize: any): Promise<void> {
+    async searchUserPaginating(req: UserTokenPayload, res: Response, keyword: string, page: number, pageSize: any): Promise<void> {
         try {
+            let checkRoleUser = await this.prisma.nguoiDung.findFirst({
+                where: { ma_tai_khoan: req.user.ma_tai_khoan, loai_nguoi_dung: "QuanTriVien" }
+            })
+            if (!checkRoleUser) {
+                return this.responseStatus.sendFobidden(res, checkRoleUser, "Tài khoản không đủ quyền truy cập")
+            }
             const skip = (page - 1) * pageSize;
             const data = await this.prisma.nguoiDung.findMany({
                 where: keyword ? { ho_ten: { contains: keyword } } : undefined,
@@ -138,11 +162,16 @@ export class UserService {
         }
     }
 
-    async getDetailUser(res: Response, req: UserTokenPayload): Promise<void> {
-        let { ma_tai_khoan } = req.user
+    async getDetailUser(id: number, res: Response, req: UserTokenPayload): Promise<void> {
         try {
+            let checkRoleUser = await this.prisma.nguoiDung.findFirst({
+                where: { ma_tai_khoan: req.user.ma_tai_khoan, loai_nguoi_dung: "QuanTriVien" }
+            })
+            if (!checkRoleUser) {
+                return this.responseStatus.sendFobidden(res, checkRoleUser, "Tài khoản không đủ quyền truy cập")
+            }
             let data = await this.prisma.nguoiDung.findUnique({
-                where: { ma_tai_khoan }
+                where: { ma_tai_khoan: id }
             })
             if (data) {
                 return this.responseStatus.successCode(res, plainToClass(SignUp, data, { excludeExtraneousValues: true }), "Xử lý thành công")
@@ -158,6 +187,12 @@ export class UserService {
 
     async getDetailAccountUser(res: Response, req: UserTokenPayload): Promise<void> {
         let { ma_tai_khoan } = req.user
+        let checkRoleUser = await this.prisma.nguoiDung.findFirst({
+            where: { ma_tai_khoan, loai_nguoi_dung: "QuanTriVien" }
+        })
+        if (!checkRoleUser) {
+            return this.responseStatus.sendFobidden(res, checkRoleUser, "Tài khoản không đủ quyền truy cập")
+        }
         try {
             let data = await this.prisma.nguoiDung.findUnique({
                 where: { ma_tai_khoan },
@@ -196,37 +231,40 @@ export class UserService {
 
     async addUser(req: UserTokenPayload, res: Response, body: SignUp) {
         try {
-            if (req.user) {
-                if (body.loai_nguoi_dung === "KhachHang" || body.loai_nguoi_dung === "KhachHang") {
-                    const mat_khau = await bcrypt.hash(body.mat_khau, 10);
-                    let checkEmailExist = await this.prisma.nguoiDung.findFirst({
-                        where: { email: body.email }
+            let checkRoleUser = await this.prisma.nguoiDung.findFirst({
+                where: { ma_tai_khoan: req.user.ma_tai_khoan, loai_nguoi_dung: "QuanTriVien" }
+            })
+            if (!checkRoleUser) {
+                return this.responseStatus.sendFobidden(res, checkRoleUser, "Tài khoản không đủ quyền truy cập")
+            }
+
+            if (body.loai_nguoi_dung === "KhachHang" || body.loai_nguoi_dung === "KhachHang") {
+                const mat_khau = await bcrypt.hash(body.mat_khau, 10);
+                let checkEmailExist = await this.prisma.nguoiDung.findFirst({
+                    where: { email: body.email }
+                })
+                let checkAccountExist = await this.prisma.nguoiDung.findFirst({
+                    where: { tai_khoan: body.tai_khoan }
+                })
+                if (!checkEmailExist && !checkAccountExist) {
+                    let user = await this.prisma.nguoiDung.create({
+                        data: { ...body, mat_khau }
                     })
-                    let checkAccountExist = await this.prisma.nguoiDung.findFirst({
-                        where: { tai_khoan: body.tai_khoan }
-                    })
-                    if (!checkEmailExist && !checkAccountExist) {
-                        let user = await this.prisma.nguoiDung.create({
-                            data: { ...body, mat_khau }
-                        })
-                        if (user) {
-                            body.createdAt = new Date();
-                            return this.responseStatus.successCode(res, plainToClass(SignUp, body) /*Hàm plainToClass sử dụng bộ biến đổi được định nghĩa trước đó bằng cách sử dụng hàm @Transform để chuyển đổi các thuộc tính của đối tượng thuần túy sang đối tượng của lớp cụ thể. Nếu một thuộc tính trong đối tượng thuần túy không có tương ứng trong lớp cụ thể, thì nó sẽ được bỏ qua.*/, "Tạo người dùng thành công")
-                        }
-                    } else {
-                        if (checkEmailExist) {
-                            this.responseStatus.sendConflict(res, body.email, "Email đã được đăng ký")
-                        }
-                        if (checkAccountExist) {
-                            this.responseStatus.sendConflict(res, body.tai_khoan, "Tài khoản đã được đăng ký")
-                        }
-                        return;
+                    if (user) {
+                        body.createdAt = new Date();
+                        return this.responseStatus.successCode(res, plainToClass(SignUp, body) /*Hàm plainToClass sử dụng bộ biến đổi được định nghĩa trước đó bằng cách sử dụng hàm @Transform để chuyển đổi các thuộc tính của đối tượng thuần túy sang đối tượng của lớp cụ thể. Nếu một thuộc tính trong đối tượng thuần túy không có tương ứng trong lớp cụ thể, thì nó sẽ được bỏ qua.*/, "Tạo người dùng thành công")
                     }
                 } else {
-                    return this.responseStatus.sendBadRequestResponse(res, body.loai_nguoi_dung, "Loại người dùng phải là QuanTriVien hoặc KhachHang")
+                    if (checkEmailExist) {
+                        this.responseStatus.sendConflict(res, body.email, "Email đã được đăng ký")
+                    }
+                    if (checkAccountExist) {
+                        this.responseStatus.sendConflict(res, body.tai_khoan, "Tài khoản đã được đăng ký")
+                    }
+                    return;
                 }
             } else {
-                return this.responseStatus.sendFobidden(res, body, "Bạn không có đủ quyền để tạo")
+                return this.responseStatus.sendBadRequestResponse(res, body.loai_nguoi_dung, "Loại người dùng phải là QuanTriVien hoặc KhachHang")
             }
 
         } catch (err) {

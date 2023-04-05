@@ -20,22 +20,22 @@ export class CinemaController {
         return await this.cinemaService.getAllCinema(res, keyword)
     }
 
-    @Get("GetDetailCinema/:id")
-    @ApiParam({ name: "id", description: "Get detail cenema by id" })
-    async getDetailCenema(@Res() res: Response, @Param("id") id: string): Promise<void> {
+    @Get("GetDetailCinema/:CinemaId")
+    @ApiParam({ name: "CinemaId", description: "Get detail cenema by CinemaId" })
+    async getDetailCenema(@Res() res: Response, @Param("CinemaId") id: string): Promise<void> {
         return await this.cinemaService.getDetailCenema(res, id)
     }
 
-    @Get("GetMovieScheduleSystemInfo/:id")
-    @ApiParam({ name: "id", description: "Get movie schedule system by id" })
-    async getMovieScheduleSystemInfo(@Res() res: Response, @Param("id") id: string): Promise<void> {
+    @Get("GetMovieScheduleSystemInfo/:CinemaId")
+    @ApiParam({ name: "CinemaId", description: "Get movie schedule system by CinemaId" })
+    async getMovieScheduleSystemInfo(@Res() res: Response, @Param("CinemaId") id: string): Promise<void> {
         return await this.cinemaService.getMovieScheduleSystemInfo(res, id)
     }
 
 
-    @Get("GetMovieScheduleInfo/:id")
-    @ApiParam({ name: "id", description: "Get movie schedule by id" })
-    async getMovieScheduleInfo(@Res() res: Response, @Param("id", ParseIntPipe) id: number): Promise<void> {
+    @Get("GetMovieScheduleInfo/:IdMovie")
+    @ApiParam({ name: "IdMovie", description: "Get movie schedule by IdMovie" })
+    async getMovieScheduleInfo(@Res() res: Response, @Param("IdMovie", ParseIntPipe) id: number): Promise<void> {
         return await this.cinemaService.getMovieScheduleInfo(res, id)
     }
 }

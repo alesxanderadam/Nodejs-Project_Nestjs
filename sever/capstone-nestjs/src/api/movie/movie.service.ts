@@ -166,7 +166,7 @@ export class MovieService {
         }
     }
 
-    async createMovie(file: Express.Multer.File, res: Response, body: MovieDto): Promise<void> {
+    async createMovie(file: Express.Multer.File, res: Response, body: MovieDto): Promise<any> {
         try {
             let checkNameMovie = await this.prisma.phim.findFirst({
                 where: {
@@ -176,11 +176,17 @@ export class MovieService {
             if (checkNameMovie) {
                 return this.responseStatus.sendConflict(res, checkNameMovie.ten_phim, "Phim đã tồn tại")
             }
+
+            let isCreateImage = false;
+            if (checkNameMovie === null) {
+                isCreateImage = true;
+            }
+
             let movieUpdate = await this.prisma.phim.create({
                 data: {
                     ten_phim: body.ten_phim,
                     trailer: body.trailer,
-                    hinh_anh: process.env.DB_HOST + ":" + process.env.PORT_SERVER + "/" + file.filename,
+                    hinh_anh: isCreateImage ? process.env.DB_HOST + ":" + process.env.PORT_SERVER + "/" + file.filename : null,
                     mo_ta: body.mo_ta,
                     ngay_khoi_chieu: format(new Date(body.ngay_khoi_chieu), "yyyy-MM-dd") + 'T00:00:00.000Z',
                     danh_gia: parseInt(body.danh_gia),
@@ -189,6 +195,7 @@ export class MovieService {
                     sap_chieu: Boolean(body.sap_chieu)
                 }
             })
+
             if (movieUpdate == null) {
                 this.responseStatus.sendBadRequestResponse(res, movieUpdate, "Không thể thêm phim");
             } else {
@@ -202,6 +209,7 @@ export class MovieService {
             throw new HttpException('Lỗi server', HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
 
 
     async uploadImageMovie(id: number, res: Response, files: Express.Multer.File[]): Promise<void> {
@@ -308,66 +316,49 @@ export class MovieService {
         }
     }
 
-    async deleteMovie(id: number, res: Response) {
+    async deleteMovie(req: UserTokenPayload, id: number, res: Response) {
         try {
-            let checkMovie = await this.prisma.phim.findUnique({
-                where: { ma_phim: id },
+            let checkRoleUser = await this.prisma.nguoiDung.findFirst({
+                where: { ma_tai_khoan: req.user.ma_tai_khoan, loai_nguoi_dung: "QuanTriVien" }
             })
-
-            let checkBanner = await this.prisma.banner.findFirst({
-                where: { ma_phim: id }
-            })
-
-            let checkLichChieu = await this.prisma.lichChieu.findFirst({
-                where: { ma_phim: id }
-            })
-
-            if (checkMovie !== null) {
-                const dataBanner = await this.prisma.banner.findMany({
-                    where: { ma_phim: id, ma_banner: checkBanner.ma_banner },
-                });
-                const dataLichChieu = await this.prisma.lichChieu.findMany({
-                    where: { ma_phim: id, ma_lich_chieu: checkLichChieu.ma_lich_chieu, ma_rap: checkLichChieu.ma_rap },
-                });
-
-                switch (true) {
-                    case dataBanner.length > 0 && dataLichChieu.length > 0:
-                        await this.prisma.banner.delete({
-                            where: { ma_banner: checkBanner.ma_banner }
-                        });
-
-                        await this.prisma.lichChieu.delete({
-                            where: { ma_lich_chieu: checkLichChieu.ma_lich_chieu }
-                        })
-
-                        await this.prisma.phim.delete({ where: { ma_phim: id } })
-                        break;
-                    case dataBanner.length > 0 && dataLichChieu.length < 0:
-                        await this.prisma.banner.delete({
-                            where: { ma_banner: checkBanner.ma_banner }
-                        });
-
-                        await this.prisma.phim.delete({ where: { ma_phim: id } })
-                        break;
-                    case dataBanner.length < 0 && dataLichChieu.length > 0:
-                        await this.prisma.lichChieu.delete({
-                            where: { ma_lich_chieu: checkLichChieu.ma_lich_chieu }
-                        })
-
-                        await this.prisma.phim.delete({ where: { ma_phim: id } })
-                        break;
-                    default:
-                        await this.prisma.phim.delete({ where: { ma_phim: id } })
-                }
-
-
-                return this.responseStatus.successCode(res, id, `Phim có mã là ${id} đã được xóa`)
-            } else {
-                return this.responseStatus.sendNotFoundResponse(res, `Phim có mã là ${id} không tồn tại`, "Không tìm thấy dữ liệu")
+            if (!checkRoleUser) {
+                return this.responseStatus.sendFobidden(res, id, "Bạn không đủ quyền để xóa")
             }
+            const movie = await this.prisma.phim.findUnique({ where: { ma_phim: id } });
+            if (!movie) {
+                return this.responseStatus.sendNotFoundResponse(res, `Phim có mã là ${id} không tồn tại`, "Không tìm thấy dữ liệu");
+            }
+
+            const [banner, lichChieu] = await Promise.all([
+                this.prisma.banner.findFirst({ where: { ma_phim: id } }),
+                this.prisma.lichChieu.findFirst({ where: { ma_phim: id } })
+            ]);
+
+            if (banner && lichChieu) {
+                await Promise.all([
+                    this.prisma.banner.delete({ where: { ma_banner: banner.ma_banner } }),
+                    this.prisma.lichChieu.delete({ where: { ma_lich_chieu: lichChieu.ma_lich_chieu } }),
+                    this.prisma.phim.delete({ where: { ma_phim: id } })
+                ]);
+            } else if (banner) {
+                await Promise.all([
+                    this.prisma.banner.delete({ where: { ma_banner: banner.ma_banner } }),
+                    this.prisma.phim.delete({ where: { ma_phim: id } })
+                ]);
+            } else if (lichChieu) {
+                await Promise.all([
+                    this.prisma.lichChieu.delete({ where: { ma_lich_chieu: lichChieu.ma_lich_chieu } }),
+                    this.prisma.phim.delete({ where: { ma_phim: id } })
+                ]);
+            } else {
+                await this.prisma.phim.delete({ where: { ma_phim: id } });
+            }
+
+            return this.responseStatus.successCode(res, id, `Phim có mã là ${id} đã được xóa`);
         } catch (err) {
-            console.log(err)
+            console.log(err);
             throw new HttpException('Lỗi server', HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
 }

@@ -8,13 +8,17 @@ import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import multer, { diskStorage } from 'multer';
 import { MovieDto } from 'src/models/movie/swagger/movie-swagger';
 import { UserTokenPayload } from 'src/models/user/dto/user.dto';
+import { ResponseService } from 'src/common/response-status';
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard(("jwt")))
 @ApiTags("Movie-Management")
 @Controller('api/Movie')
 export class MovieController {
-    constructor(readonly movieService: MovieService) { }
+    constructor(
+        readonly movieService: MovieService,
+        private responseStatus: ResponseService
+    ) { }
 
 
 
@@ -31,8 +35,8 @@ export class MovieController {
         return await this.movieService.getAllMovie(res, keyword)
     }
 
-    @Get("GetDetailMovie/:id")
-    async getDetailMovie(@Res() res: Response, @Param("id", ParseIntPipe) id: number): Promise<void> {
+    @Get("GetDetailMovie/:IdMovie")
+    async getDetailMovie(@Res() res: Response, @Param("IdMovie", ParseIntPipe) id: number): Promise<void> {
         return await this.movieService.getDetailMovie(res, id)
     }
 
@@ -78,10 +82,12 @@ export class MovieController {
     @ApiBody({ type: MovieDto })
     async createMovie(@UploadedFile() file: Express.Multer.File, @Res() res: Response, @Body() body: MovieDto): Promise<void> {
         try {
-            return await this.movieService.createMovie(file, res, body)
+            const movie = await this.movieService.createMovie(file, res, body);
+
+            return movie;
         } catch (error) {
-            console.error(error);
-            throw new HttpException('Lỗi server', HttpStatus.INTERNAL_SERVER_ERROR);
+            console.log(error);
+            throw new HttpException("Lỗi server", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -150,8 +156,9 @@ export class MovieController {
     })
 
     async deleteUser(
+        @Req() req: UserTokenPayload,
         @Param("IdMovie", ParseIntPipe) id: number, @Res() res: Response): Promise<void> {
-        return await this.movieService.deleteMovie(id, res)
+        return await this.movieService.deleteMovie(req, id, res)
     }
 
 

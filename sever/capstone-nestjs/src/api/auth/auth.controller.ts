@@ -24,7 +24,6 @@ export class AuthController {
         description: 'Tên đăng nhập hoặc mật khẩu không chính xác',
     })
     @ApiOperation({
-        summary: 'Sign In',
         description: 'Sign in with email and password',
     })
     async signIn(@Res() res, @Body() body: SignIn): Promise<void> {
@@ -41,9 +40,9 @@ export class AuthController {
         status: HttpStatus.CONFLICT,
         description: 'Email đã được đăng ký',
     })
-    @ApiOperation({
-        summary: 'Sign up user',
-    })
+    // @ApiOperation({
+    //     summary: 'Sign up user',
+    // })
     async signUp(@Request() req, @Res() res: Response, @Body() body: SignUp): Promise<void> {
         return await this.authService.signUp(req, res, body)
     }
