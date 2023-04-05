@@ -1,12 +1,13 @@
 import { AuthGuard } from '@nestjs/passport';
-import { ApiTags, ApiBearerAuth, ApiQuery, ApiConsumes, ApiBody, ApiParam } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiQuery, ApiConsumes, ApiBody, ApiParam, ApiResponse, ApiOperation } from '@nestjs/swagger';
 import { MovieService } from './movie.service';
 import { Controller, Get, Res, UseGuards, Query, ParseIntPipe, Post, UseInterceptors, UploadedFile, UploadedFiles, HttpStatus, HttpException } from '@nestjs/common';
 import { Response } from 'express';
-import { Body, Param } from '@nestjs/common/decorators';
+import { Body, Delete, Param, Put, Req } from '@nestjs/common/decorators';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import multer, { diskStorage } from 'multer';
 import { MovieDto } from 'src/models/movie/swagger/movie-swagger';
+import { UserTokenPayload } from 'src/models/user/dto/user.dto';
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard(("jwt")))
@@ -84,24 +85,6 @@ export class MovieController {
         }
     }
 
-    @Post("UpdateMovie/IdMovie")
-    @UseInterceptors(FileInterceptor("hinh_anh", {
-        storage: diskStorage({
-            destination: process.cwd() + "/public/images/",
-            filename: (req, file, callback) => callback(null, Date.now() + "_" + file.originalname)
-        })
-    }))
-    @ApiConsumes('multipart/form-data')
-    @ApiBody({ type: MovieDto })
-    async updateMovie(@Param("IdImage", ParseIntPipe) idImage: number, @UploadedFile() file: Express.Multer.File, @Res() res: Response, @Body() body: MovieDto): Promise<void> {
-        try {
-            return await this.movieService.updateMovie(idImage, file, res, body)
-        } catch (error) {
-            console.error(error);
-            throw new HttpException('Lỗi server', HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
     @Post("UploadImagesMovie/:IdMovie")
     @UseInterceptors(FilesInterceptor("files", 20, {
         storage: diskStorage({
@@ -133,4 +116,43 @@ export class MovieController {
     ): Promise<void> {
         return await this.movieService.uploadImageMovie(id, res, files);
     }
+
+    @Put("UpdateMovie/:IdMovie")
+    @UseInterceptors(FileInterceptor("hinh_anh", {
+        storage: diskStorage({
+            destination: process.cwd() + "/public/images/",
+            filename: (req, file, callback) => callback(null, Date.now() + "_" + file.originalname)
+        })
+    }))
+    @ApiConsumes('multipart/form-data')
+    @ApiParam({ name: "IdMovie", description: "Enter id movie to upload image this movie" })
+    @ApiBody({ type: MovieDto })
+    async updateMovie(@Req() req: UserTokenPayload, @Param("IdMovie", ParseIntPipe) IdMovie: number, @UploadedFile() file: Express.Multer.File, @Res() res: Response, @Body() body: MovieDto): Promise<void> {
+        try {
+            return await this.movieService.updateMovie(req, IdMovie, file, res, body)
+        } catch (error) {
+            console.error(error);
+            throw new HttpException('Lỗi server', HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Delete("DeleteUser/:IdMovie")
+    @ApiResponse({
+        status: HttpStatus.OK,
+        description: 'Xóa phim thành công',
+    })
+    @ApiResponse({
+        status: HttpStatus.NOT_FOUND,
+        description: 'Phim không tồn tại',
+    })
+    @ApiOperation({
+        summary: 'Delete movie',
+    })
+
+    async deleteUser(
+        @Param("IdMovie", ParseIntPipe) id: number, @Res() res: Response): Promise<void> {
+        return await this.movieService.deleteMovie(id, res)
+    }
+
+
 }

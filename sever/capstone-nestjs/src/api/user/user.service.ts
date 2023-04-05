@@ -250,7 +250,7 @@ export class UserService {
                         where: { ma_tai_khoan: checkAccountExist.ma_tai_khoan },
                     });
                     if (newEmail === oldEmail) {
-                        if (body.loai_nguoi_dung === "KhachHang" || body.loai_nguoi_dung === "KhachHang") {
+                        if (body.loai_nguoi_dung === "KhachHang" || body.loai_nguoi_dung === "QuanTriVien") {
                             const mat_khau = await bcrypt.hash(body.mat_khau, 10);
                             let data = await this.prisma.nguoiDung.update({
                                 where: { ma_tai_khoan: checkAccountExist.ma_tai_khoan },
@@ -268,7 +268,7 @@ export class UserService {
                         if (checkEmailExist) {
                             return this.responseStatus.sendConflict(res, body.email, "Email đã tồn tại")
                         } else {
-                            if (body.loai_nguoi_dung === "KhachHang" || body.loai_nguoi_dung === "KhachHang") {
+                            if (body.loai_nguoi_dung === "KhachHang" || body.loai_nguoi_dung === "QuanTriVien") {
                                 const mat_khau = await bcrypt.hash(body.mat_khau, 10);
                                 let data = await this.prisma.nguoiDung.update({
                                     where: { ma_tai_khoan: checkAccountExist.ma_tai_khoan },

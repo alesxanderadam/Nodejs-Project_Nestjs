@@ -124,7 +124,7 @@ export class UserController {
         description: 'Người dùng không tồn tại',
     })
     @ApiOperation({
-        summary: 'Update user',
+        summary: 'Delete user',
     })
 
     async deleteUser(

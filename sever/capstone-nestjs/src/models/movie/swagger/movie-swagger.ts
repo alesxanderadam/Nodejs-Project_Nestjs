@@ -17,8 +17,7 @@ export class MovieDto {
     @ApiProperty({ name: "ngay_khoi_chieu", type: String, description: "Enter Relese date movie", example: "04-12-2022" })
     ngay_khoi_chieu: string;
 
-    @ApiProperty({ name: "danh_gia", type: Number, description: "Enter rate movie", example: 5 })
-    @Transform(({ value }) => parseInt(value))
+    @ApiProperty({ name: "danh_gia", type: String, description: "Enter rate movie", example: 5 })
     danh_gia: any;
 
     @ApiProperty({ name: "hot", type: Boolean, example: true })
