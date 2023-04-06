@@ -6,6 +6,7 @@ import { Response } from 'express';
 import { HttpException } from '@nestjs/common/exceptions';
 import { HttpStatus } from '@nestjs/common/enums';
 import { format } from 'date-fns';
+import { CreateMovieShowTimes } from 'src/models/ticket/swagger/ticket-swagger';
 
 @Injectable()
 export class TicketService {
@@ -147,39 +148,66 @@ export class TicketService {
         }
     }
 
-    async createMovieShowTimes(req: UserTokenPayload, res: Response, body: any) {
+    async createMovieShowTimes(req: UserTokenPayload, res: Response, body: CreateMovieShowTimes) {
         try {
-            let checkRole = await this.prisma.nguoiDung.findFirst({
+            const checkRole = await this.prisma.nguoiDung.findFirst({
                 where: { ma_tai_khoan: req.user.ma_tai_khoan, loai_nguoi_dung: "QuanTriVien" }
-            })
-            if (!checkRole) {
-                return this.responseStatus.sendFobidden(res, checkRole.loai_nguoi_dung, "Bạn không có đủ quyền để tạo")
-            }
-            let findMovieShowTimes = await this.prisma.lichChieu.findMany({
-                where: {
-                    ma_rap: parseInt(body.maRap),
-                    ma_phim: parseInt(body.maPhim)
-                }
-            })
-            if (findMovieShowTimes.length > 0) {
-                this.responseStatus.sendConflict(res, findMovieShowTimes, "Lịch chiếu dã tồn tại")
-                return;
-            }
-            let createMovieShowtimes = await this.prisma.lichChieu.create({
-                data: { ma_rap: body.maRap, ma_phim: body.maPhim, ngay_gio_chieu: new Date(body.ngayGioChieu), gia_ve: body.giaVe }
-            })
-            if (createMovieShowtimes) {
-                this.responseStatus.successCode(res, createMovieShowtimes, "Tạo lịch chiếu thành công")
-            } else {
-                this.responseStatus.successCodeNoData(res, "Không có dữ liệu")
-                return;
+            });
 
+            if (!checkRole) {
+                return this.responseStatus.sendFobidden(res, checkRole.loai_nguoi_dung, "Bạn không có đủ quyền để tạo");
+            }
+
+            const existingShowTimes = await this.prisma.lichChieu.findMany({
+                where: {
+                    ma_rap: body.maRap,
+                    ma_phim: body.maPhim
+                }
+            });
+
+            let checkExistIdMovie = await this.prisma.phim.findUnique({
+                where: { ma_phim: body.maPhim }
+            })
+
+            let checkExistIdCinema = this.prisma.rapPhim.findUnique({
+                where: { ma_rap: body.maRap }
+            })
+
+            if (!checkExistIdMovie && !checkExistIdCinema) {
+                return this.responseStatus.sendNotFoundResponse(res, null, "Không tìm thấy mã phim và mã rạp")
+            } else if (!checkExistIdMovie) {
+                return this.responseStatus.sendBadRequestResponse(res, null, "Không tìm thấy mã phim")
+            } else if (!checkExistIdCinema) {
+                return this.responseStatus.sendBadRequestResponse(res, null, "Không tìm thấy mã rạp")
+            }
+
+
+            if (existingShowTimes.length > 0) {
+                this.responseStatus.sendConflict(res, existingShowTimes, "Lịch chiếu đã tồn tại");
+                return;
+            }
+
+            const newShowTime = await this.prisma.lichChieu.create({
+                data: {
+                    ma_rap: body.maRap,
+                    ma_phim: body.maPhim,
+                    ngay_gio_chieu: new Date(body.ngayGioChieu),
+                    gia_ve: body.giaVe
+                }
+            });
+
+            if (newShowTime) {
+                this.responseStatus.successCode(res, newShowTime, "Tạo lịch chiếu thành công");
+            } else {
+                this.responseStatus.successCodeNoData(res, "Không có dữ liệu");
+                return;
             }
         } catch (error) {
-            console.log(error)
+            console.log(error);
             throw new HttpException("Lỗi server", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
 
 }
 

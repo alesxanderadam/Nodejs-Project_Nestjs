@@ -27,7 +27,7 @@ export class TicketController {
 
     @Post("CreateMovieShowTimes")
     @ApiBody({ type: CreateMovieShowTimes })
-    async createMovieShowTimes(@Request() req: UserTokenPayload, @Res() res: Response, @Body() body: any): Promise<void> {
+    async createMovieShowTimes(@Request() req: UserTokenPayload, @Res() res: Response, @Body() body: CreateMovieShowTimes): Promise<void> {
         return await this.ticketService.createMovieShowTimes(req, res, body)
     }
 }

@@ -45,3 +45,11 @@ export class ThongTinPhim {
     ngayGioChieu: String
 
 }
+
+
+export interface CreateMovieShowTime {
+    maPhim: number;
+    ngayGioChieu: Date;
+    maRap: number;
+    giaVe: number;
+}
