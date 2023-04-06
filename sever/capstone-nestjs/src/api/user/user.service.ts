@@ -238,7 +238,7 @@ export class UserService {
                 return this.responseStatus.sendFobidden(res, checkRoleUser, "Tài khoản không đủ quyền truy cập")
             }
 
-            if (body.loai_nguoi_dung === "KhachHang" || body.loai_nguoi_dung === "KhachHang") {
+            if (body.loai_nguoi_dung === "KhachHang" || body.loai_nguoi_dung === "QuanTriVien") {
                 const mat_khau = await bcrypt.hash(body.mat_khau, 10);
                 let checkEmailExist = await this.prisma.nguoiDung.findFirst({
                     where: { email: body.email }
@@ -337,6 +337,18 @@ export class UserService {
                 where: { ma_tai_khoan: id }
             })
             if (checkUser) {
+                let checkExist = await this.prisma.datVe.findFirst({
+                    where: { ma_tai_khoan: id }
+                })
+                if (checkExist) {
+                    let dataDele = await this.prisma.datVe.delete({
+                        where: { ma_dat_ve: checkExist.ma_dat_ve }
+                    })
+                    if (dataDele) {
+                        return this.responseStatus.successCode(res, id, `Người dùng có tài khoản ${id} đã được xóa`)
+                    }
+                    return this.responseStatus.sendNotFoundResponse(res, id, "Xóa không thành công")
+                }
                 let data = await this.prisma.nguoiDung.delete({ where: { ma_tai_khoan: id } })
                 return this.responseStatus.successCode(res, data.ma_tai_khoan, `Người dùng có tài khoản ${id} đã được xóa`)
             } else {
