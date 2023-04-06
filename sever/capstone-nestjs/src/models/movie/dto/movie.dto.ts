@@ -42,7 +42,7 @@ export class ListMovieResponseDto {
 
     @Expose({ name: "HinhAnhPhim" })
     @Transform(({ value }) => {
-        const urls = value.map(item => `${item.duong_dan}`);
+        const urls = value?.map(item => `${item.duong_dan}`);
         return { duongDan: [urls?.reduce((prev, current) => `${prev}, ${current}`)] };
     })
     hinhAnhPhim: { url: string }[];
