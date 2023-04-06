@@ -61,7 +61,14 @@ export class MovieService {
     async getDetailMovie(res: Response, id: number): Promise<void> {
         try {
             let data = await this.prisma.phim.findUnique({
-                where: { ma_phim: id }
+                where: { ma_phim: id },
+                include: {
+                    HinhAnhPhim: {
+                        select: {
+                            duong_dan: true
+                        }
+                    }
+                }
             })
             if (data) {
                 return this.responseStatus.successCode(res, plainToClass(ListMovieResponseDto, data, { excludeExtraneousValues: false }), "Xử lý thành công")
@@ -107,7 +114,7 @@ export class MovieService {
         }
     }
 
-    async getMovieListByDate(res: Response, keyword: string, page: number, pageSize: number, fromDay?: Date, toDay?: Date): Promise<void> {
+    async getMovieListByDate(res: Response, keyword: string, page: number, pageSize: any, fromDay?: Date, toDay?: Date): Promise<void> {
         try {
             let formattedFromDay: string | undefined;
             let formattedToDay: string | undefined;
@@ -142,7 +149,7 @@ export class MovieService {
             const listMovie = await this.prisma.phim.findMany({
                 where: whereClause,
                 skip,
-                take: pageSize,
+                take: parseInt(pageSize),
             })
             const totalItems = await this.prisma.phim.count({
                 where: whereClause
@@ -177,16 +184,11 @@ export class MovieService {
                 return this.responseStatus.sendConflict(res, checkNameMovie.ten_phim, "Phim đã tồn tại")
             }
 
-            let isCreateImage = false;
-            if (checkNameMovie === null) {
-                isCreateImage = true;
-            }
-
             let movieUpdate = await this.prisma.phim.create({
                 data: {
                     ten_phim: body.ten_phim,
                     trailer: body.trailer,
-                    hinh_anh: isCreateImage ? process.env.DB_HOST + ":" + process.env.PORT_SERVER + "/" + file.filename : null,
+                    hinh_anh: process.env.DB_HOST + ":" + process.env.PORT_SERVER + "/" + file.filename,
                     mo_ta: body.mo_ta,
                     ngay_khoi_chieu: format(new Date(body.ngay_khoi_chieu), "yyyy-MM-dd") + 'T00:00:00.000Z',
                     danh_gia: parseInt(body.danh_gia),

@@ -57,8 +57,8 @@ export class MovieController {
     @ApiQuery({ name: 'keyword', required: false, description: 'Search keyword include movie name' })
     @ApiQuery({ name: 'page', required: false, description: 'Page number' })
     @ApiQuery({ name: 'pageSize', required: false, description: 'Number of items per page' })
-    @ApiQuery({ name: 'fromDay', required: false, description: 'Enter the date to search' })
-    @ApiQuery({ name: 'toDay', required: false, description: 'Enter the end date' })
+    @ApiQuery({ name: 'fromDay', type: Date, example: "12-12-2021", required: false, description: 'Enter the date to search' })
+    @ApiQuery({ name: 'toDay', type: Date, example: "01-12-2022", required: false, description: 'Enter the end date' })
     async getMovieListByDate(
         @Res() res: Response,
         @Query("keyword") keyword: string,

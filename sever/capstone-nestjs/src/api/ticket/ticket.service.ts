@@ -24,6 +24,7 @@ export class TicketService {
                             DatVe: true,
                             ma_lich_chieu: true,
                             ngay_gio_chieu: true,
+                            gia_ve: true,
                             Phim: {
                                 select: {
                                     ten_phim: true,
@@ -79,7 +80,7 @@ export class TicketService {
                             maRap: ghe.ma_rap,
                             loaiGhe: ghe.loai_ghe,
                             stt: ghe.ten_ghe.slice(-2),
-                            giaVe: ghe.loai_ghe === "VIP" ? 120000 : 100000,
+                            giaVe: lichChieu.gia_ve,
                             daDat,
                             taiKhoanNguoiDat,
                         };

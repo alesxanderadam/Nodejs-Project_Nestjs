@@ -1,4 +1,3 @@
-import { ApiProperty } from "@nestjs/swagger";
 import { Expose, Transform } from "class-transformer";
 import * as moment from 'moment';
 export class BannerResponseDto {
@@ -41,5 +40,11 @@ export class ListMovieResponseDto {
     @Expose({ name: "sap_chieu" })
     sapChieu: boolean;
 
+    @Expose({ name: "HinhAnhPhim" })
+    @Transform(({ value }) => {
+        const urls = value.map(item => `${item.duong_dan}`);
+        return { duongDan: [urls.reduce((prev, current) => `${prev}, ${current}`)] };
+    })
+    hinhAnhPhim: { url: string }[];
 }
 
