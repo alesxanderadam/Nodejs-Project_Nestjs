@@ -24,12 +24,6 @@ services:
       - mysql_dbmovie:/var/lib/mysql
     networks:
       - node-network
-
-volumes:
-  mysql_dbmovie:
-    driver: local
-    name: cc0ada818d48e9f72ffe120c86d46efcf629fe50b73b13062debcd21665c5c26
-
 networks:
   node-network:
   
