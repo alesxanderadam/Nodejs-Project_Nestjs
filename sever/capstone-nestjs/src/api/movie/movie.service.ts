@@ -331,15 +331,17 @@ export class MovieService {
                 return this.responseStatus.sendNotFoundResponse(res, `Phim có mã là ${id} không tồn tại`, "Không tìm thấy dữ liệu");
             }
 
-            const [banner, lichChieu] = await Promise.all([
+            const [banner, lichChieu, hinhAnhPhim] = await Promise.all([
                 this.prisma.banner.findFirst({ where: { ma_phim: id } }),
-                this.prisma.lichChieu.findFirst({ where: { ma_phim: id } })
+                this.prisma.lichChieu.findFirst({ where: { ma_phim: id } }),
+                this.prisma.hinhAnhPhim.findFirst({ where: { ma_phim: id } }),
             ]);
 
             if (banner && lichChieu) {
                 await Promise.all([
                     this.prisma.banner.delete({ where: { ma_banner: banner.ma_banner } }),
                     this.prisma.lichChieu.delete({ where: { ma_lich_chieu: lichChieu.ma_lich_chieu } }),
+                    this.prisma.hinhAnhPhim.deleteMany({ where: { ma_phim: hinhAnhPhim.ma_phim } }),
                     this.prisma.phim.delete({ where: { ma_phim: id } })
                 ]);
             } else if (banner) {
@@ -352,6 +354,11 @@ export class MovieService {
                     this.prisma.lichChieu.delete({ where: { ma_lich_chieu: lichChieu.ma_lich_chieu } }),
                     this.prisma.phim.delete({ where: { ma_phim: id } })
                 ]);
+            } else if (hinhAnhPhim) {
+                await Promise.all([
+                    this.prisma.hinhAnhPhim.deleteMany({ where: { ma_phim: hinhAnhPhim.ma_phim } }),
+                    this.prisma.phim.delete({ where: { ma_phim: id } })
+                ])
             } else {
                 await this.prisma.phim.delete({ where: { ma_phim: id } });
             }
