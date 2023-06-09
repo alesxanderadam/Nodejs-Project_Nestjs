@@ -15,7 +15,7 @@ services:
     image: mysql
     container_name: mysql_dbmovie
     ports:
-      - 3307:3306
+      - 2241:3306
     environment:
       - MYSQL_DATABASE=db_movie
       - MYSQL_ROOT_PASSWORD=1234
