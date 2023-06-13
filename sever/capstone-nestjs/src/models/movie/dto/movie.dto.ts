@@ -40,10 +40,19 @@ export class ListMovieResponseDto {
     @Expose({ name: "sap_chieu" })
     sapChieu: boolean;
 
-    @Expose({ name: "HinhAnhPhim" })
+    // @Expose({ name: "HinhAnhPhim" })
+    // @Transform(({ value }) => {
+    //     const urls = value?.map(item => `${item.duong_dan}`);
+    //     return { duongDan: [urls?.reduce((prev, current) => `${prev}, ${current}`)] };
+    // })
+    // hinhAnhPhim: { url: string }[];
+
     @Transform(({ value }) => {
         const urls = value?.map(item => `${item.duong_dan}`);
-        return { duongDan: [urls?.reduce((prev, current) => `${prev}, ${current}`)] };
+        if (urls && urls.length > 0) {
+            return { duongDan: [urls.reduce((prev, current) => `${prev}, ${current}`)] };
+        }
+        return { duongDan: [] };
     })
     hinhAnhPhim: { url: string }[];
 }
